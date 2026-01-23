@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from 'express';
-import JWT from '../utils/jwt';
+import type { NextFunction, Request, Response } from 'express';
+import * as JWT from '../utils/jwt.ts';
 
 export const loggedIn = (req: Request, res: Response, next: NextFunction) => {
    const token = JWT.getTokenFromRequest(req);
@@ -8,13 +8,13 @@ export const loggedIn = (req: Request, res: Response, next: NextFunction) => {
       return res.sendStatus(401);
    }
 
-   const user = JWT.getUserFromToken<{ username: string }>(token);
+   const user = JWT.getUserFromToken<typeof req.user>(token);
 
    if (!user) {
       return res.sendStatus(403);
    }
 
-   (req as any).user = user;
+   req.user = user;
 
    next();
 };

@@ -2,10 +2,10 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './assets/styles.css';
 
-import { Login } from './App';
+import { App } from './root';
 
 createRoot(document.getElementById('root')!).render(
    <StrictMode>
-      <Login />
-   </StrictMode>
+      <App />
+   </StrictMode>,
 );

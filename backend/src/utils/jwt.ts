@@ -3,14 +3,14 @@ import jwt from 'jsonwebtoken';
 
 const JWT_KEY = 'nyundnc9329cw BDcnecac2';
 
-const getTokenFromRequest = (req: Request) => {
+export const getTokenFromRequest = (req: Request) => {
    const authHeader = req.headers['authorization'];
    const token = authHeader && authHeader.split(' ')[1];
 
    return token || null;
 };
 
-const getUserFromToken = <T>(token: string) => {
+export const getUserFromToken = <T>(token: string) => {
    try {
       return jwt.verify(token, JWT_KEY) as T;
    } catch (error) {
@@ -26,11 +26,3 @@ export const generateUserToken = <T>(
       expiresIn: expiresIn as any,
    });
 };
-
-const JWT = {
-   getTokenFromRequest,
-   getUserFromToken,
-   generateUserToken,
-};
-
-export default JWT;
