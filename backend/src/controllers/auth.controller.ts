@@ -1,22 +1,19 @@
 import type { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import db from '../db.ts';
-import type { ResultSetHeader, RowDataPacket } from 'mysql2';
-import * as JWT from '../utils/jwt.ts';
+import * as JWT from '../utils/jwt.js';
+import { prisma } from '../db/connection.js';
+import { userResource } from '../resources/index.js';
 
 const login = async (req: Request, res: Response) => {
    const { username, password } = req.body;
 
-   const [rows] = await db.query<RowDataPacket[]>(
-      'SELECT * FROM users WHERE username = ?',
-      [username],
-   );
+   const user = await prisma.user.findUnique({
+      where: { username },
+   });
 
-   if (rows.length === 0 || !rows[0]) {
+   if (!user) {
       return res.sendStatus(401);
    }
-
-   const user = rows[0];
 
    const isPasswordValid = await bcrypt.compare(password, user.password);
 
@@ -27,38 +24,46 @@ const login = async (req: Request, res: Response) => {
    const token = JWT.generateUserToken({
       id: user.id,
       username: user.username,
+      name: user.name,
    });
 
-   return res.json({ token, user: { id: user.id, username: user.username } });
+   return res.json({
+      token,
+      user: userResource(user),
+   });
 };
 
 const signup = async (req: Request, res: Response) => {
-   const { username, password } = req.body;
+   const { username, password, name } = req.body;
 
-   const [rows] = await db.query<RowDataPacket[]>(
-      'SELECT * FROM users WHERE username = ?',
-      [username],
-   );
+   const existingUser = await prisma.user.findUnique({
+      where: { username },
+   });
 
-   if (rows.length > 0) {
+   if (existingUser) {
       return res.status(409).json({ message: 'Username already exists' });
    }
 
    const hashedPassword = await bcrypt.hash(password, 10);
 
-   const [inserted] = await db.query<ResultSetHeader>(
-      'INSERT INTO users (username, password) VALUES (?, ?)',
-      [username, hashedPassword],
-   );
-
-   const userId = inserted.insertId;
-
-   const token = JWT.generateUserToken({
-      id: userId,
-      username: username,
+   const user = await prisma.user.create({
+      data: {
+         username,
+         password: hashedPassword,
+         name,
+      },
    });
 
-   return res.status(201).json({ token, user: { id: userId, username } });
+   const token = JWT.generateUserToken({
+      id: user.id,
+      username: user.username,
+      name: user.name,
+   });
+
+   return res.status(201).json({
+      token,
+      user: userResource(user),
+   });
 };
 
 const me = async (req: Request, res: Response) => {

@@ -1,18 +1,29 @@
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 
 import { useAuthStore } from '~/stores/auth.store';
 import { api } from '~/lib/api';
 import { Container } from '~/components/auth/container';
-import { Input } from '~/components/auth/input';
-import { SubmitButton } from '~/components/auth/submit-button';
+
+import { Button } from '~/components/ui/button';
+import {
+   Field,
+   FieldDescription,
+   FieldError,
+   FieldGroup,
+   FieldLabel,
+} from '~/components/ui/field';
+import { Input } from '~/components/ui/input';
+import { Link } from 'react-router';
 
 export default function SignupPage() {
    const authStore = useAuthStore();
 
    const schema = z
       .object({
+         name: z.string().min(3, 'Name must be at least 3 characters'),
          username: z.string().min(3, 'Username must be at least 3 characters'),
          password: z.string().min(6, 'Password must be at least 6 characters'),
          confirmPassword: z.string(),
@@ -31,49 +42,83 @@ export default function SignupPage() {
       setError,
    } = useForm<Inputs>({
       resolver: zodResolver(schema),
-      defaultValues: { username: '', password: '', confirmPassword: '' },
+      defaultValues: {
+         name: '',
+         username: '',
+         password: '',
+         confirmPassword: '',
+      },
    });
 
-   const signup: SubmitHandler<Inputs> = (data) => {
-      api.post('/auth/signup', {
-         username: data.username,
-         password: data.password,
-      })
-         .then((response) => {
-            const data = response.data;
-            authStore.setToken(data.token);
-            authStore.setUser(data.user);
-         })
-         .catch((e) => {
-            setError('username', {
-               type: 'manual',
-               message: e.response?.data?.message || 'An error occurred',
-            });
+   const { mutate: signup } = useMutation({
+      mutationFn: (data: Inputs) => api.post('/auth/signup', data),
+      onSuccess: (response) => {
+         const data = response.data;
+         authStore.setToken(data.token);
+         authStore.setUser(data.user);
+      },
+      onError: (e: any) => {
+         setError('username', {
+            type: 'manual',
+            message: e.response?.data?.message || 'An error occurred',
          });
-   };
+      },
+   });
 
    return (
-      <Container title="Sign Up">
-         <form className="flex flex-col gap-4" onSubmit={handleSubmit(signup)}>
-            <Input
-               type="text"
-               placeholder="Username"
-               {...register('username')}
-               error={errors.username?.message}
-            />
-            <Input
-               type="password"
-               placeholder="Password"
-               {...register('password')}
-               error={errors.password?.message}
-            />
-            <Input
-               type="password"
-               placeholder="Confirm Password"
-               {...register('confirmPassword')}
-               error={errors.confirmPassword?.message}
-            />
-            <SubmitButton label="Sign Up" />
+      <Container
+         title="Sign up for an account"
+         description="Enter your username below to create a new account"
+      >
+         <form onSubmit={handleSubmit((data) => signup(data))}>
+            <FieldGroup>
+               <Field>
+                  <FieldLabel htmlFor="name">Name</FieldLabel>
+                  <Input id="name" type="text" required {...register('name')} />
+                  <FieldError errors={[errors.name]} />
+               </Field>
+               <Field>
+                  <FieldLabel htmlFor="username">Username</FieldLabel>
+                  <Input
+                     id="username"
+                     type="text"
+                     required
+                     {...register('username')}
+                  />
+                  <FieldError errors={[errors.username]} />
+               </Field>
+               <div className="flex items-center gap-4">
+                  <Field>
+                     <FieldLabel htmlFor="password">Password</FieldLabel>
+                     <Input
+                        id="password"
+                        type="password"
+                        required
+                        {...register('password')}
+                     />
+                     <FieldError errors={[errors.password]} />
+                  </Field>
+                  <Field>
+                     <FieldLabel htmlFor="confirmPassword">
+                        Password confirmation
+                     </FieldLabel>
+                     <Input
+                        id="confirmPassword"
+                        type="password"
+                        required
+                        {...register('confirmPassword')}
+                     />
+                     <FieldError errors={[errors.confirmPassword]} />
+                  </Field>
+               </div>
+               <Field>
+                  <Button type="submit">Sign up</Button>
+                  <FieldDescription className="text-center">
+                     Already have an account?{' '}
+                     <Link to="/auth/login">Login</Link>
+                  </FieldDescription>
+               </Field>
+            </FieldGroup>
          </form>
       </Container>
    );

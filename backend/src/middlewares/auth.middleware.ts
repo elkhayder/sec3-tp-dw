@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import * as JWT from '../utils/jwt.ts';
+import * as JWT from '../utils/jwt.js';
 
 export const loggedIn = (req: Request, res: Response, next: NextFunction) => {
    const token = JWT.getTokenFromRequest(req);

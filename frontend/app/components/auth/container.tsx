@@ -1,13 +1,25 @@
+import {
+   Card,
+   CardContent,
+   CardDescription,
+   CardHeader,
+   CardTitle,
+} from '~/components/ui/card';
+
 export const Container = (props: {
    title: string;
+   description?: string;
    children: React.ReactNode;
 }) => {
    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-         <h1 className="text-3xl font-bold mb-6">{props.title}</h1>
-         <div className="w-96 p-6 border border-gray-300 rounded shadow-md">
-            {props.children}
-         </div>
-      </div>
+      <Card>
+         <CardHeader>
+            <CardTitle className="text-center">{props.title}</CardTitle>
+            <CardDescription className="text-center text-xs">
+               {props.description}
+            </CardDescription>
+         </CardHeader>
+         <CardContent>{props.children}</CardContent>
+      </Card>
    );
 };

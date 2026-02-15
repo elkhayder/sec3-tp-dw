@@ -2,13 +2,11 @@ import { create } from 'zustand';
 
 export type User = {
    id: number;
+   name: string;
    username: string;
 };
 
 type AuthStore = {
-   isInitialized: boolean;
-   setIsInitialized: (value: boolean) => void;
-
    token: string | null;
    setToken: (token: string | null) => void;
 
@@ -19,9 +17,7 @@ type AuthStore = {
 export const useAuthStore = create<AuthStore>((set) => ({
    token: null,
    user: null,
-   isInitialized: false,
 
    setToken: (token) => set({ token }),
    setUser: (user) => set({ user }),
-   setIsInitialized: (value) => set({ isInitialized: value }),
 }));
