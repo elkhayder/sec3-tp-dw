@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-git clone git@github.com:elkhayder/sec3-tp-dw.git && cd tp-dw
+git clone git@github.com:elkhayder/sec3-tp-dw.git && cd sec3-tp-dw
 ```
 
 ### Backend
